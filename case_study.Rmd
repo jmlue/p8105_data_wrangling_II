@@ -1,0 +1,175 @@
+---
+title: "case_study.Rmd"
+author: "Jesus Luevano"
+date: "2023-10-10"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(rvest)
+library(httr)
+```
+
+```{r}
+library(p8105.datasets)
+
+data(nyc_airbnb)
+
+nyc_airbnb = 
+  nyc_airbnb %>%
+  rename(borough = neighbourhood_group) %>%
+  mutate(stars = review_scores_location /2)
+```
+
+
+```{r Airbnb}
+# Uncompress and load the detailed NYC airbnb data
+# But only keep the 2 variables of interest
+#zz <- gzfile("listings.csv.gz", 'rt')   
+#airbnb_location_df = 
+ # read_csv(zz, header = TRUE) %>% 
+  #select(id, review_scores_location)
+
+# Read in the summary data for NYC
+airbnb_listings_df =
+  read_csv("nyc_airbnb.csv") %>% 
+  mutate(last_review = as.Date(last_review, format = "%Y-%m-%d"))
+
+# Combine the two datasets
+#nyc_airbnb = inner_join(airbnb_location_df, airbnb_listings_df, by = "id")
+
+# Save the data
+#save(nyc_airbnb, file = "nyc_airbnb.RData")
+```
+
+## Brainstorm questions
+
+-Where are AirBNBs expensive?
+  - Borough? Neighborhood?
+  - Do other factors (room type) affect price? what about rating?
+- How long are AirBNBs active?
+  - Are some illegal/get shut down?
+-Which units have most avaliability?
+-How is review score impacted by location?
+- How many apts are run by one host?
+  - Does that affect price?
+  - Dose that vary by neighborhood?
+-Where are AirBNBs?
+  -Borought?
+
+#Do some EDA
+  
+```{r my examples}
+#Most popular neighborhoods
+nyc_airbnb %>%
+  group_by(borough, neighbourhood) %>%
+  summarize(n_obs = n()) %>%
+  arrange(desc(n_obs))
+
+#price of most popular neighborhoods
+nyc_airbnb %>%
+  group_by(borough, neighbourhood, price) %>%
+  summarize(n_obs = n()) %>%
+  arrange(desc(n_obs))
+
+#Costliest neighborhoods
+nyc_airbnb %>%
+  group_by(neighbourhood, price) %>% 
+  arrange(desc(price))
+```
+
+```{r class examples}
+nyc_airbnb %>%
+  count(borough)
+
+nyc_airbnb %>%
+  group_by(borough) %>%
+  summarize(mean_price = mean(price))
+
+nyc_airbnb %>%
+  group_by(borough, room_type) %>%
+  summarize(mean_price = mean(price)) %>%
+  pivot_wider(
+    names_from = room_type,
+    values_from = mean_price
+  )
+
+nyc_airbnb %>%
+  group_by(borough, room_type) %>%
+  summarize(median_price = mean(price)) %>%
+  pivot_wider(
+    names_from = room_type,
+    values_from = median_price
+  ) 
+
+nyc_airbnb %>%
+  ggplot(aes(x = price)) +
+  geom_histogram() +
+  facet_grid(borough ~ room_type)
+
+nyc_airbnb %>%
+  filter(price >= 9500)
+```
+
+```{r}
+nyc_airbnb %>%
+  filter(price <1000, room_type == "Entire home/apt") %>%
+  group_by(neighbourhood) %>%
+  ggplot(aes(x = price)) +
+  geom_histogram() + 
+  facet_grid(. ~ borough)
+```
+
+```{r}
+nyc_airbnb %>%
+  filter(price <1000, room_type == "Entire home/apt",
+         borough == "Manhattan") %>%
+  group_by(neighbourhood) %>%
+  summarize(
+    n_apt = n(),
+    mean_price = mean(price)
+  ) %>%
+  arrange(desc(mean_price)) 
+  
+nyc_airbnb %>%
+  filter(price <1000, room_type == "Entire home/apt",
+         borough == "Manhattan") %>%
+  mutate(neighbourhood = fct_reorder(neighbourhood, price)) %>% #make it factor variable in order of price
+  ggplot(aes(x = neighbourhood, y = price)) +
+  geom_boxplot()
+
+
+library(ggridges)
+nyc_airbnb %>%
+  filter(price <1000, room_type == "Entire home/apt",
+         borough == "Manhattan") %>%
+  mutate(neighbourhood = fct_reorder(neighbourhood, price)) %>% #make it factor variable in order of price
+  ggplot(aes(x = price, y = neighbourhood)) +
+  geom_density_ridges()
+
+```
+
+## Try to make a map
+```{r}
+nyc_airbnb %>%
+  filter(price <1000, 
+         room_type == "Entire home/apt",
+         borough == "Manhattan") %>%
+  ggplot(aes(x = lat, y = long, color = price)) +
+  geom_point()
+```
+
+Try something else entirely (Leaflet)
+```{r}
+library(leaflet)
+
+nyc_airbnb %>%
+  filter(price <1000, 
+         room_type == "Entire home/apt",
+         borough == "Manhattan") %>%
+  leaflet() %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addCircleMarkers(~long, ~lat)
+```
+
