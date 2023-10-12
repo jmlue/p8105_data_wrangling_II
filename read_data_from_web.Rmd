@@ -1,0 +1,58 @@
+---
+title: "read_data_from_web"
+author: "Jesus Luevano"
+date: "2023-10-12"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(rvest)
+library(httr)
+```
+
+Import NSDUH data
+
+```{r}
+nsduh_url = "http://samhda.s3-us-gov-west-1.amazonaws.com/s3fs-public/field-uploads/2k15StateFiles/NSDUHsaeShortTermCHG2015.htm"
+
+nsduh_html = read_html(nsduh_url)
+
+nsduh_html
+```
+
+```{r}
+nsduh_html %>%
+  html_table() # gives ALL tables
+
+marj_use.df =
+  nsduh_html %>%
+  html_table() %>%
+  first() %>% #take only first table
+  slice(-1) #remove first row
+```
+
+Import Star Wars...
+
+```{r}
+smw_html = read_html("https://www.imdb.com/list/ls070150896/")
+
+title_vec = 
+  smw_html |>
+  html_elements(".lister-item-header a") |>
+  html_text()
+
+smw_gross_rev_vec = 
+  smw_html %>%
+  html_elements(".text-small:nth-child(7) span:nth-child(5)") %>%
+  html_text()
+```
+
+```{r}
+smw_title_grossrev.df =
+  tibble(
+    title = title_vec,
+    gross_revenue = smw_gross_rev_vec
+  )
+```
+
