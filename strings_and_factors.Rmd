@@ -1,0 +1,89 @@
+---
+title: "strings_and_factors"
+author: "Jesus Luevano"
+date: "2023-10-17"
+output: html_document
+---
+
+#load librarys
+```{r}
+library(rvest)
+library(p8105.datasets)
+library(stringr)
+```
+
+## Strings and manipulations
+
+```{r}
+string_vec = c("my", "name", "is", "jeff")
+
+str_detect(string_vec, "e")
+
+str_replace(string_vec, "jeff", "Jeff Goldsmith")
+```
+
+```{r}
+string_vec = c(
+  "i think we all rule for participating",
+  "i think i have been caught",
+  "i think this will be quite fun actually",
+  "it will be fun, i think"
+  )
+
+str_detect(string_vec, "i think") #all positive, but doesn't look at position
+str_detect(string_vec, "^i think") # `^` means start of line
+str_detect(string_vec, "i think$") #means something after, only pulls out last string?
+```
+
+```{r}
+string_vec = c(
+  "Time for a Pumpkin Spice Latte!",
+  "went to the #pumpkinpatch last weekend",
+  "Pumpkin Pie is obviously the best pie",
+  "SMASHING PUMPKINS -- LIVE IN CONCERT!!"
+  )
+
+str_detect(string_vec, "Pumpkin")
+str_detect(string_vec, "[Pp]umpkin") #everything within bracket, can match either or
+```
+
+```{r}
+string_vec = c(
+  '7th inning stretch',
+  '1st half soon to begin. Texas won the toss.',
+  'she is 5 feet 4 inches tall',
+  '3AM - cant sleep :('
+  )
+
+str_detect(string_vec, "[0-9]") #range of numbers, but will match anything
+str_detect(string_vec, "^[0-9]") #range of numbers, but only at beginning of line
+str_detect(string_vec, "[0-9][a-z]") #range of numbers, and then followed by any lower-case letter
+```
+
+## looking at 7s
+
+```{r}
+string_vec = c(
+  'Its 7:11 in the evening',
+  'want to go to 7-11?',
+  'my flight is AA711',
+  'NetBios: scanning ip 203.167.114.66'
+  )
+
+str_detect(string_vec, "7.11") # `.` means ANYTHING
+```
+
+## Special characters, `\` before it
+
+```{r}
+string_vec = c(
+  'The CI is [2, 5]',
+  ':-]',
+  ':-[',
+  'I found the answer on pages [6-7]'
+  )
+
+str_detect(string_vec, "\\[")
+str_detect(string_vec, "\\[[0-9]")
+```
+
